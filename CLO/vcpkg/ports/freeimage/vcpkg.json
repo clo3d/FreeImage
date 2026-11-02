@@ -1,0 +1,64 @@
+{
+  "$comment": "Overlay of vcpkg's ports/freeimage at upstream commit 07f4812200df, plus the macOS typedef change to the installed FreeImage.h, and the plugins that need a library of their own (EXR, J2K/JP2, JXR, RAW) as default features, so a build can leave them out (see portfile.cmake).",
+  "name": "freeimage",
+  "version": "3.18.0",
+  "port-version": 27,
+  "description": "Support library for graphics image formats",
+  "homepage": "https://sourceforge.net/projects/freeimage/",
+  "license": "GPL-2.0-only OR GPL-3.0-only OR FreeImage",
+  "dependencies": [
+    "imath",
+    "libjpeg-turbo",
+    "libpng",
+    {
+      "name": "libwebp",
+      "default-features": false,
+      "platform": "!uwp"
+    },
+    {
+      "name": "tiff",
+      "default-features": false
+    },
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    },
+    "zlib"
+  ],
+  "default-features": [
+    "exr",
+    "jpeg2000",
+    "jxr",
+    "raw"
+  ],
+  "features": {
+    "exr": {
+      "description": "OpenEXR plugin",
+      "dependencies": [
+        "openexr"
+      ]
+    },
+    "jpeg2000": {
+      "description": "JPEG 2000 plugins (J2K, JP2)",
+      "dependencies": [
+        "openjpeg"
+      ]
+    },
+    "jxr": {
+      "description": "JPEG XR plugin",
+      "dependencies": [
+        "jxrlib"
+      ]
+    },
+    "raw": {
+      "description": "Camera RAW plugin",
+      "dependencies": [
+        "libraw"
+      ]
+    }
+  }
+}

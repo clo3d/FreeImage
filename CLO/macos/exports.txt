@@ -1,0 +1,7 @@
+_FreeImage_*
+_WebP*
+_VP8CheckSignature
+_VP8GetCPUInfo
+_VP8GetInfo
+_VP8LCheckSignature
+_VP8LGetInfo
