@@ -3,6 +3,9 @@
 CLO Virtual Fashion's modified FreeImage 3.18.0, as built into CLO products. Published to make the
 modified source available under the FreeImage Public License (FIPL), `license-fi.txt`.
 
+FreeImage is dual-licensed (FIPL, GPL v2, GPL v3). CLO uses and distributes it under the FreeImage Public License
+(FIPL) only; `license-gplv2.txt` and `license-gplv3.txt` are kept unchanged from the original distribution.
+
 FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so this file is the repository's front page).
 
 ## Specs
