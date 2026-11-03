@@ -49,6 +49,9 @@ FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so thi
 All platforms use vcpkg at upstream commit `07f4812200df` (microsoft/vcpkg, 2026-09-27), with the overlay port
 and triplets from `CLO/vcpkg`. The other ports (libwebp 1.6.0, libjpeg-turbo, libpng, zlib, libtiff, OpenJPEG,
 jxrlib, LibRaw 0.22.2, OpenEXR, Imath, OpenJPH, libdeflate, liblzma, ...) are upstream's at that commit.
+The shipped binaries were built with CLO's internal vcpkg, with the same freeimage overlay port and equivalent
+triplets (those in `CLO/vcpkg/triplets` are CLO's triplets written out in full, without their settings for
+unrelated ports); upstream `07f4812200df` with the files here reproduces them.
 Every library is built static; the build then merges them into the one library CLO links.
 
 ### Getting vcpkg
