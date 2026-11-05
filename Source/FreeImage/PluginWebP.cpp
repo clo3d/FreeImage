@@ -263,7 +263,12 @@ DecodeImage(WebPData *webp_image, int flags) {
 		// --- Set decoding options ---
 
 		// use multi-threaded decoding
+		// CLO: not on Emscripten, where the libwebp worker thread is a Web Worker; decode on the calling thread there
+#ifdef __EMSCRIPTEN__
+		decoder_config.options.use_threads = 0;
+#else
 		decoder_config.options.use_threads = 1;
+#endif
 		// set output color space
 		output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
 

@@ -73,6 +73,12 @@ vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/Plugin.cpp"
     "static PluginList *s_plugins = NULL;\n"
     "static PluginList *s_plugins = NULL;\n\n// Holds the id of a plugin this build leaves out; disabled, so lookups and loads skip it.\nstatic void DLL_CALLCONV InitUnavailable(Plugin *, int) {}\n\nstatic void AddUnavailablePlugin(PluginList *plugins, const char *format, const char *extension) {\n\tFREE_IMAGE_FORMAT fif = plugins->AddNode(InitUnavailable, NULL, format, \"Unavailable in this build\", extension, NULL);\n\tif (fif != FIF_UNKNOWN) {\n\t\tplugins->FindNodeFromFIF(fif)->m_enabled = FALSE;\n\t}\n}\n")
 
+# CLO: on Emscripten the WebP plugin decodes on the calling thread (use_threads = 0). There libwebp's worker
+# thread is a Web Worker, started per lossy WebP 512 px or wider. Other platforms keep use_threads = 1.
+vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/PluginWebP.cpp"
+    "\t\t// use multi-threaded decoding\n\t\tdecoder_config.options.use_threads = 1;\n"
+    "\t\t// use multi-threaded decoding\n\t\t// CLO: not on Emscripten, where the libwebp worker thread is a Web Worker; decode on the calling thread there\n#ifdef __EMSCRIPTEN__\n\t\tdecoder_config.options.use_threads = 0;\n#else\n\t\tdecoder_config.options.use_threads = 1;\n#endif\n")
+
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         exr      FREEIMAGE_WITH_EXR
