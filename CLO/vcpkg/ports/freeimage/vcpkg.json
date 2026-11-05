@@ -1,5 +1,5 @@
 {
-  "$comment": "Overlay of vcpkg's ports/freeimage at upstream commit 07f4812200df, plus the macOS typedef change to the installed FreeImage.h, and the plugins that need a library of their own (EXR, J2K/JP2, JXR, RAW) as default features, so a build can leave them out (see portfile.cmake).",
+  "$comment": "Overlay of vcpkg's ports/freeimage at upstream commit 07f4812200df, plus the macOS typedef change to the installed FreeImage.h, and the plugins that need a library of their own (EXR, J2K/JP2, JXR, RAW) as default features, so a build can leave them out, and on Emscripten the WebP plugin decodes without a libwebp worker thread (see portfile.cmake).",
   "name": "freeimage",
   "version": "3.18.0",
   "port-version": 27,

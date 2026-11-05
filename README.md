@@ -12,7 +12,7 @@ FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so thi
 - Original: FreeImage 3.18.0, `FreeImage3180.zip` (https://sourceforge.net/projects/freeimage/files/Source%20Distribution/3.18.0/)
 - Original SHA512: `9d9cc7e2d57552c3115e277aeb036e0455204d389026b17a3f513da5be1fd595421655488bb1ec2f76faebed66049119ca55e26e2a6d37024b3fb7ef36ad4818`
 - Built with vcpkg (freeimage port 3.18.0, port-version 27, with a CLO overlay) for Windows x64, macOS (arm64/x64), Linux x64 and WebAssembly.
-- `FreeImage-3.18.0-clo.patch` is the whole change from the original as one diff (18 files, +418/-98), except the removed directories listed below.
+- `FreeImage-3.18.0-clo.patch` is the whole change from the original as one diff (18 files, +423/-98), except the removed directories listed below.
 
 ## Changes (2026-10-13, libwebp CVE-2023-4863 rebuild)
 1. **vcpkg freeimage port patches (16):** use the external libjpeg-turbo, libpng, zlib, libtiff, libwebp,
@@ -38,12 +38,18 @@ FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so thi
      out `FreeImageToolkit/JPEGTransform.cpp`, which needs FreeImage's private libjpeg;
    - saved as UTF-8 (the original has one Latin-1 character in a comment).
 
+## Changes (2026-11-05, WebAssembly WebP decode)
+7. **CLO, `Source/FreeImage/PluginWebP.cpp`:** on Emscripten (`__EMSCRIPTEN__`) the WebP plugin decodes with
+   `use_threads = 0`, on the calling thread. With `use_threads = 1`, libwebp starts a worker thread for each
+   lossy WebP 512 px or wider, and in WebAssembly that thread is a Web Worker. Windows, macOS and Linux keep
+   `use_threads = 1`, so their binaries are unchanged. libwebp itself is unchanged.
+
 ## Files added by CLO
 - `README.md` (this file); FreeImage's original `README.md` is kept unchanged as `README.FreeImage.md`.
 - `FreeImage-3.18.0-clo.patch`: see Specs.
 - `CLO/so_init.cpp`, `CLO/include/FreeImage.h`: see changes 5 and 6.
 - `CLO/vcpkg/ports/freeimage/`: the vcpkg overlay port the binaries were built with (vcpkg's freeimage port
-  3.18.0#27 with changes 2 and 4). It applies the 16 patches and the `Plugin.cpp` change to the original zip,
+  3.18.0#27 with changes 2, 4 and 7). It applies the 16 patches and the `Plugin.cpp` and `PluginWebP.cpp` changes to the original zip,
   so building it reproduces the source tree above.
 - `CLO/vcpkg/triplets/`: the vcpkg triplets for each platform.
 - `CLO/macos/exports.txt`: the symbols the macOS dylib exports.

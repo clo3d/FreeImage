@@ -726,7 +726,7 @@ index 5068d94..02de9d8 100644
  	plugin->format_proc = Format;
  	plugin->description_proc = Description;
 diff --git a/Source/FreeImage/PluginWebP.cpp b/Source/FreeImage/PluginWebP.cpp
-index 7c9f62f..c401447 100644
+index 7c9f62f..3c761fb 100644
 --- a/Source/FreeImage/PluginWebP.cpp
 +++ b/Source/FreeImage/PluginWebP.cpp
 @@ -24,9 +24,9 @@
@@ -742,6 +742,19 @@ index 7c9f62f..c401447 100644
  
  // ==========================================================
  // Plugin Interface
+@@ -263,7 +263,12 @@ DecodeImage(WebPData *webp_image, int flags) {
+ 		// --- Set decoding options ---
+ 
+ 		// use multi-threaded decoding
++		// CLO: not on Emscripten, where the libwebp worker thread is a Web Worker; decode on the calling thread there
++#ifdef __EMSCRIPTEN__
++		decoder_config.options.use_threads = 0;
++#else
+ 		decoder_config.options.use_threads = 1;
++#endif
+ 		// set output color space
+ 		output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
+ 
 diff --git a/Source/FreeImage/ZLibInterface.cpp b/Source/FreeImage/ZLibInterface.cpp
 index 3ab6d32..725618b 100644
 --- a/Source/FreeImage/ZLibInterface.cpp
