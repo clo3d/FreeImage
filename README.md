@@ -12,7 +12,7 @@ FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so thi
 - Original: FreeImage 3.18.0, `FreeImage3180.zip` (https://sourceforge.net/projects/freeimage/files/Source%20Distribution/3.18.0/)
 - Original SHA512: `9d9cc7e2d57552c3115e277aeb036e0455204d389026b17a3f513da5be1fd595421655488bb1ec2f76faebed66049119ca55e26e2a6d37024b3fb7ef36ad4818`
 - Built with vcpkg (freeimage port 3.18.0, port-version 27, with a CLO overlay) for Windows x64, macOS (arm64/x64), Linux x64 and WebAssembly.
-- `FreeImage-3.18.0-clo.patch` is the whole change from the original as one diff (18 files, +423/-98), except the removed directories listed below.
+- `FreeImage-3.18.0-clo.patch` is the whole change from the original as one diff (18 files, +443/-98), except the removed directories listed below.
 
 ## Changes (2026-10-13, libwebp CVE-2023-4863 rebuild)
 1. **vcpkg freeimage port patches (16):** use the external libjpeg-turbo, libpng, zlib, libtiff, libwebp,
@@ -44,14 +44,27 @@ FreeImage's own README is `README.FreeImage.md` (renamed from `README.md` so thi
    lossy WebP 512 px or wider, and in WebAssembly that thread is a Web Worker. Windows, macOS and Linux keep
    `use_threads = 1`, so their binaries are unchanged. libwebp itself is unchanged.
 
+## Changes (2026-11-17, WebAssembly broken PNG/JPEG)
+8. **CLO, `Source/FreeImage/PluginPNG.cpp` and `PluginJPEG.cpp`:** on Emscripten, `Load`'s bitmap pointer `dib`
+   (and PNG's `row_pointers`) is `volatile`. `Load` sets a `setjmp` point, then allocates them, and its `catch`
+   frees them after libpng's/libjpeg's `longjmp`. A non-volatile local changed after `setjmp` is undefined after
+   `longjmp`; in WebAssembly it reads back as NULL, so an image broken in its pixel data leaked its whole bitmap.
+   JPEG's `RotateExif(&dib)` takes a `FIBITMAP**`, so there it goes through a plain copy. Windows, macOS and Linux
+   keep the original declarations, so their binaries are unchanged.
+9. **Build, `CLO/vcpkg/triplets/wasm32-emscripten-clo-fi.cmake` and `wasm64-emscripten-clo-fi.cmake`:** the
+   WebAssembly builds compile with C++ exception catching (`-sDISABLE_EXCEPTION_CATCHING=0`). Without it the
+   plugins' `catch` blocks were compiled out, so what a plugin throws for a broken PNG, JPEG or WebP left
+   FreeImage and its cleanup never ran. A build setting only; no source change.
+
 ## Files added by CLO
 - `README.md` (this file); FreeImage's original `README.md` is kept unchanged as `README.FreeImage.md`.
 - `FreeImage-3.18.0-clo.patch`: see Specs.
 - `CLO/so_init.cpp`, `CLO/include/FreeImage.h`: see changes 5 and 6.
 - `CLO/vcpkg/ports/freeimage/`: the vcpkg overlay port the binaries were built with (vcpkg's freeimage port
-  3.18.0#27 with changes 2, 4 and 7). It applies the 16 patches and the `Plugin.cpp` and `PluginWebP.cpp` changes to the original zip,
+  3.18.0#27 with changes 2, 4, 7 and 8). It applies the 16 patches and the `Plugin.cpp`, `PluginWebP.cpp`,
+  `PluginPNG.cpp` and `PluginJPEG.cpp` changes to the original zip,
   so building it reproduces the source tree above.
-- `CLO/vcpkg/triplets/`: the vcpkg triplets for each platform.
+- `CLO/vcpkg/triplets/`: the vcpkg triplets for each platform (change 9 for WebAssembly).
 - `CLO/macos/exports.txt`: the symbols the macOS dylib exports.
 
 ## How it was built

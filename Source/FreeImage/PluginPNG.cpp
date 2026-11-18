@@ -509,8 +509,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int bit_depth;
 	int pixel_depth = 0;	// pixel_depth = bit_depth * channels
 
+	// CLO: volatile on Emscripten. Both are set after the setjmp below and freed in the catch after libpng's
+	// longjmp. Non-volatile locals changed after setjmp are undefined after longjmp; in WebAssembly they read NULL.
+#ifdef __EMSCRIPTEN__
+	FIBITMAP * volatile dib = NULL;
+	png_bytepp volatile row_pointers = NULL;
+#else
 	FIBITMAP *dib = NULL;
 	png_bytepp row_pointers = NULL;
+#endif
 
     fi_ioStructure fio;
     fio.s_handle = handle;

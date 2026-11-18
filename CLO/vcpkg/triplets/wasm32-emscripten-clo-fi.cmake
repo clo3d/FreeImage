@@ -12,8 +12,10 @@ set(VCPKG_BUILD_TYPE release)
 # The application links with -sUSE_PTHREADS=1, so every port is built with -pthread.
 # -msimd128 turns on SIMD128; -msse2/-msse4.1 make clang define __SSE2__/__SSE4_1__ so libwebp's
 # *_sse2.c/*_sse41.c compile to real code.
-set(VCPKG_C_FLAGS "-pthread -msimd128 -msse2 -msse4.1")
-set(VCPKG_CXX_FLAGS "-pthread -msimd128 -msse2 -msse4.1")
+# -sDISABLE_EXCEPTION_CATCHING=0 turns on C++ exception catching (Emscripten's JS model, as the application
+# links): FreeImage's plugins catch what they throw for a broken image and free what they had allocated.
+set(VCPKG_C_FLAGS "-pthread -msimd128 -msse2 -msse4.1 -sDISABLE_EXCEPTION_CATCHING=0")
+set(VCPKG_CXX_FLAGS "-pthread -msimd128 -msse2 -msse4.1 -sDISABLE_EXCEPTION_CATCHING=0")
 set(VCPKG_LINKER_FLAGS "-pthread")
 
 # libwebp 1.6.0's cmake/cpu.cmake detects only SSE4.1 on Emscripten; state that SSE2 is there too.

@@ -1153,7 +1153,13 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (handle) {
+		// CLO: volatile on Emscripten, as in PluginPNG.cpp: set after the setjmp below and freed in the catch after
+		// libjpeg's longjmp
+#ifdef __EMSCRIPTEN__
+		FIBITMAP * volatile dib = NULL;
+#else
 		FIBITMAP *dib = NULL;
+#endif
 
 		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
@@ -1377,7 +1383,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// check for automatic Exif rotation
 			if(!header_only && ((flags & JPEG_EXIFROTATE) == JPEG_EXIFROTATE)) {
+#ifdef __EMSCRIPTEN__
+				// CLO: RotateExif takes a FIBITMAP**, and dib is volatile here
+				FIBITMAP *rotated = dib;
+				RotateExif(&rotated);
+				dib = rotated;
+#else
 				RotateExif(&dib);
+#endif
 			}
 
 			// everything went well. return the loaded dib

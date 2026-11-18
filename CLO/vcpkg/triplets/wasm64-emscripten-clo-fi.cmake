@@ -9,8 +9,8 @@ set(VCPKG_CMAKE_SYSTEM_NAME Emscripten)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/scripts/toolchains/emscripten.cmake")
 set(VCPKG_BUILD_TYPE release)
 
-set(VCPKG_C_FLAGS "-pthread -sMEMORY64=1 -msimd128 -msse2 -msse4.1")
-set(VCPKG_CXX_FLAGS "-pthread -sMEMORY64=1 -msimd128 -msse2 -msse4.1")
+set(VCPKG_C_FLAGS "-pthread -sMEMORY64=1 -msimd128 -msse2 -msse4.1 -sDISABLE_EXCEPTION_CATCHING=0")
+set(VCPKG_CXX_FLAGS "-pthread -sMEMORY64=1 -msimd128 -msse2 -msse4.1 -sDISABLE_EXCEPTION_CATCHING=0")
 set(VCPKG_LINKER_FLAGS "-pthread -sMEMORY64=1 -sWASM_BIGINT")
 
 if(PORT STREQUAL "libwebp")

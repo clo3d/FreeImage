@@ -79,6 +79,20 @@ vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/PluginWebP.cpp"
     "\t\t// use multi-threaded decoding\n\t\tdecoder_config.options.use_threads = 1;\n"
     "\t\t// use multi-threaded decoding\n\t\t// CLO: not on Emscripten, where the libwebp worker thread is a Web Worker; decode on the calling thread there\n#ifdef __EMSCRIPTEN__\n\t\tdecoder_config.options.use_threads = 0;\n#else\n\t\tdecoder_config.options.use_threads = 1;\n#endif\n")
 
+# CLO: on Emscripten, PNG and JPEG Load keep the bitmap pointer (PNG also its row pointers) volatile. Load sets a
+# setjmp point, then allocates them, and its catch frees them after libpng's/libjpeg's longjmp. A non-volatile
+# local changed after setjmp is undefined after longjmp; in WebAssembly it reads back as NULL, so an image broken in
+# its pixel data leaked its whole bitmap. Other platforms keep the original declarations.
+vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/PluginPNG.cpp"
+    "\tFIBITMAP *dib = NULL;\n\tpng_bytepp row_pointers = NULL;\n"
+    "\t// CLO: volatile on Emscripten. Both are set after the setjmp below and freed in the catch after libpng's\n\t// longjmp. Non-volatile locals changed after setjmp are undefined after longjmp; in WebAssembly they read NULL.\n#ifdef __EMSCRIPTEN__\n\tFIBITMAP * volatile dib = NULL;\n\tpng_bytepp volatile row_pointers = NULL;\n#else\n\tFIBITMAP *dib = NULL;\n\tpng_bytepp row_pointers = NULL;\n#endif\n")
+vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/PluginJPEG.cpp"
+    "\t\tFIBITMAP *dib = NULL;\n"
+    "\t\t// CLO: volatile on Emscripten, as in PluginPNG.cpp: set after the setjmp below and freed in the catch after\n\t\t// libjpeg's longjmp\n#ifdef __EMSCRIPTEN__\n\t\tFIBITMAP * volatile dib = NULL;\n#else\n\t\tFIBITMAP *dib = NULL;\n#endif\n")
+vcpkg_replace_string("${SOURCE_PATH}/Source/FreeImage/PluginJPEG.cpp"
+    "\t\t\t\tRotateExif(&dib);\n"
+    "#ifdef __EMSCRIPTEN__\n\t\t\t\t// CLO: RotateExif takes a FIBITMAP**, and dib is volatile here\n\t\t\t\tFIBITMAP *rotated = dib;\n\t\t\t\tRotateExif(&rotated);\n\t\t\t\tdib = rotated;\n#else\n\t\t\t\tRotateExif(&dib);\n#endif\n")
+
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         exr      FREEIMAGE_WITH_EXR

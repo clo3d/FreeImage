@@ -534,7 +534,7 @@ index 742fe2c..c57f626 100644
  
  // ==========================================================
 diff --git a/Source/FreeImage/PluginJPEG.cpp b/Source/FreeImage/PluginJPEG.cpp
-index 8db177d..91d7a99 100644
+index 8db177d..80e0d0e 100644
 --- a/Source/FreeImage/PluginJPEG.cpp
 +++ b/Source/FreeImage/PluginJPEG.cpp
 @@ -35,9 +35,9 @@ extern "C" {
@@ -586,6 +586,35 @@ index 8db177d..91d7a99 100644
  
  	// write IPTC profile
  	jpeg_write_iptc_profile(cinfo, dib);
+@@ -1153,7 +1153,13 @@ SupportsNoPixels() {
+ static FIBITMAP * DLL_CALLCONV
+ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
+ 	if (handle) {
++		// CLO: volatile on Emscripten, as in PluginPNG.cpp: set after the setjmp below and freed in the catch after
++		// libjpeg's longjmp
++#ifdef __EMSCRIPTEN__
++		FIBITMAP * volatile dib = NULL;
++#else
+ 		FIBITMAP *dib = NULL;
++#endif
+ 
+ 		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+ 
+@@ -1377,7 +1383,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
+ 
+ 			// check for automatic Exif rotation
+ 			if(!header_only && ((flags & JPEG_EXIFROTATE) == JPEG_EXIFROTATE)) {
++#ifdef __EMSCRIPTEN__
++				// CLO: RotateExif takes a FIBITMAP**, and dib is volatile here
++				FIBITMAP *rotated = dib;
++				RotateExif(&rotated);
++				dib = rotated;
++#else
+ 				RotateExif(&dib);
++#endif
+ 			}
+ 
+ 			// everything went well. return the loaded dib
 diff --git a/Source/FreeImage/PluginJXR.cpp b/Source/FreeImage/PluginJXR.cpp
 index 0e14e09..8eb9d5d 100644
 --- a/Source/FreeImage/PluginJXR.cpp
@@ -601,7 +630,7 @@ index 0e14e09..8eb9d5d 100644
  // ==========================================================
  // Plugin Interface
 diff --git a/Source/FreeImage/PluginPNG.cpp b/Source/FreeImage/PluginPNG.cpp
-index 661f160..d9ccb17 100644
+index 661f160..af60184 100644
 --- a/Source/FreeImage/PluginPNG.cpp
 +++ b/Source/FreeImage/PluginPNG.cpp
 @@ -40,8 +40,8 @@
@@ -615,6 +644,22 @@ index 661f160..d9ccb17 100644
  
  // ----------------------------------------------------------
  
+@@ -509,8 +509,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
+ 	int bit_depth;
+ 	int pixel_depth = 0;	// pixel_depth = bit_depth * channels
+ 
++	// CLO: volatile on Emscripten. Both are set after the setjmp below and freed in the catch after libpng's
++	// longjmp. Non-volatile locals changed after setjmp are undefined after longjmp; in WebAssembly they read NULL.
++#ifdef __EMSCRIPTEN__
++	FIBITMAP * volatile dib = NULL;
++	png_bytepp volatile row_pointers = NULL;
++#else
+ 	FIBITMAP *dib = NULL;
+ 	png_bytepp row_pointers = NULL;
++#endif
+ 
+     fi_ioStructure fio;
+     fio.s_handle = handle;
 diff --git a/Source/FreeImage/PluginRAW.cpp b/Source/FreeImage/PluginRAW.cpp
 index e9bd5bf..b1294ee 100644
 --- a/Source/FreeImage/PluginRAW.cpp
